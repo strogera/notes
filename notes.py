@@ -114,6 +114,7 @@ def readNotesDirectory(args):
 parser = argparse.ArgumentParser(description='Manage your notes.')
 parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
 parser.add_argument('-n', '--new', dest='newNoteName', help='Start a new Note. Saves it in the -d directory')
+parser.add_argument('-l', '--list-tags', dest='listTags', action='store_true', help='List available tags')
 args = parser.parse_args()
 
 #printAllFilesWithTags()
@@ -124,5 +125,13 @@ if args.newNoteName:
     with open(newNoteFullPath, 'w') as newNote:
         newNote.write('# ' + args.newNoteName)
     system('vim ' + newNoteFullPath) 
-
 readNotesDirectory(args)
+
+if args.listTags:
+    print("# Available tags")
+    availableTags = list(filesOfTag.keys())
+    for tag in sorted(availableTags):
+        if tag == untagged:
+            continue
+        print('* ' + tag)
+
