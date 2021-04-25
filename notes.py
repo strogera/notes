@@ -114,7 +114,8 @@ def readNotesDirectory(args):
 parser = argparse.ArgumentParser(description='Manage your notes.')
 parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
 parser.add_argument('-n', '--new', dest='newNoteName', help='Start a new Note. Saves it in the -d directory')
-parser.add_argument('-l', '--list-tags', dest='listTags', action='store_true', help='List available tags')
+parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', help='List available tags')
+parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
 parser.add_argument('-t', '--tag-find', dest='tagToFind', help='Find all files with tag')
 args = parser.parse_args()
 
@@ -129,12 +130,18 @@ if args.newNoteName:
 readNotesDirectory(args)
 
 if args.listTags:
-    print("# Available tags")
+    print("# Available tags\n")
     availableTags = list(filesOfTag.keys())
     for tag in sorted(availableTags):
         if tag == untagged:
             continue
         print('* ' + tag)
+
+if args.listNotes:
+    print("# Available notes\n")
+    availableNotes = list(tagsOfFile.keys())
+    for note in sorted(availableNotes):
+        print('* ' + makeMarkdownLink(note))
 
 if args.tagToFind:
     tagToFind = args.tagToFind
@@ -143,7 +150,7 @@ if args.tagToFind:
     if tagToFind not in filesOfTag:
         print('Tag doesn\'t exist')
     else:
-        print('# ' + tagToFind)
+        print('# ' + tagToFind + '\n')
         for file in filesOfTag[tagToFind]:
             print('* ' + makeMarkdownLink(file))
 
