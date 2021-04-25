@@ -7,7 +7,6 @@ from collections import defaultdict
 parser = argparse.ArgumentParser(description='Manage your notes.')
 parser.add_argument('-d', '--directory', dest='directory', help='Specify the directory of the notes')
 args = parser.parse_args()
-print(args.directory)
 if not path.exists(args.directory) or not path.isdir(args.directory):
     print('Not a valid directory')
     exit
@@ -47,16 +46,43 @@ for (dirpath, dirnames, filenames) in walk(args.directory):
                     filesOfTag[untagged].append(filename)
                     tagsOfFile[filename].append(untagged)
 
-for tag in filesOfTag:
-    print('# '+tag)
-    print()
-    for l in filesOfTag[tag]:
-        print('* ['+'placeholder'+']('+l.replace(' ', '%5C')+')')
-        #print('* ['+'placeholder'+']('+l.replace(' ', '%20')+')')
-    print()
+def getFileNameFromPath(path):
+    name = ''
+    for c in path[::-1]:
+        if c!='/':
+            name += c
+        else:
+            break
+    return name[::-1]
 
-#for file in tagsOfFile:
-    #print('# ', file)
-    #for tag in tagsOfFile[file]:
-        #print(tag)
-    #print()
+def removeExtension(filename):
+    name = filename[::-1]
+    for c in name:
+        name = name[1:]
+        if c == '.':
+            break
+    return name[::-1]
+
+def getFileNameFromPathNoExtention(filename):
+    return getFileNameFromPath(removeExtension(filename))
+
+def makeMarkdownLink(filename):
+    return '['+getFileNameFromPathNoExtention(filename)+']('+filename.replace(' ', '%5C')+')'
+    return '['+getFileNameFromPathNoExtention(filename)+']('+filename.replace(' ', '%20')+')'
+
+def printAllFilesPerTag():
+    for tag in filesOfTag:
+        print('# '+tag)
+        print()
+        for l in filesOfTag[tag]:
+            print('* '+ makeMarkdownLink(l))
+        print()
+
+def printAllFilesWithTags():
+    for file in tagsOfFile:
+        print('# ', makeMarkdownLink(file))
+        for tag in tagsOfFile[file]:
+            print(tag)
+        print()
+
+printAllFilesWithTags()
