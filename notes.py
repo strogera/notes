@@ -2,12 +2,16 @@ import argparse
 import sys
 from os import path
 from os import walk
+from os import system
 from collections import defaultdict
+from datetime import datetime
 
 filesOfTag = defaultdict(list)
 tagsOfFile = defaultdict(list)
 untagged = 'untagged'
 tagChars = '-_abcdefghijklmnopqrstuvwxyz0123456789'
+time = datetime.now()
+defaultNewFileName = time.strftime("%d/%m/%Y-%H:%M:%S")
 
 def getTagsFromString(s):
     tagsFound = []
@@ -96,19 +100,29 @@ def printAllFilesWithTags():
             print('* ' + tag)
         print()
 
+def readNotesDirectory(args):
+    if not path.exists(args.directory) or not path.isdir(args.directory):
+        print('Not a valid directory')
+        exit
+
+    for (dirpath, dirnames, filenames) in walk(args.directory):
+        for f in filenames:
+            if '.md' in f or '.txt' in f:
+                fullpath = dirpath + '/' + f
+                findTagsInFile(fullpath)
+
 parser = argparse.ArgumentParser(description='Manage your notes.')
-parser.add_argument('-d', '--directory', dest='directory', help='Specify the directory of the notes')
+parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
+parser.add_argument('-n', '--new', dest='newNoteName', help='Start a new Note. Saves it in the -d directory')
 args = parser.parse_args()
-if not path.exists(args.directory) or not path.isdir(args.directory):
-    print('Not a valid directory')
-    exit
-
-
-for (dirpath, dirnames, filenames) in walk(args.directory):
-    for f in filenames:
-        if '.md' in f or '.txt' in f:
-            fullpath = dirpath + '/' + f
-            findTagsInFile(fullpath)
 
 #printAllFilesWithTags()
-printAllFilesPerTag()
+#printAllFilesPerTag()
+if args.newNoteName:
+    newNoteFullPath = args.directory + '/' + args.newNoteName
+    print(newNoteFullPath)
+    with open(newNoteFullPath, 'w') as newNote:
+        newNote.write('# ' + args.newNoteName)
+    system('vim ' + newNoteFullPath) 
+
+readNotesDirectory(args)
