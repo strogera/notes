@@ -116,6 +116,7 @@ parser.add_argument('-d', '--directory', dest='directory', required=True, help='
 parser.add_argument('-n', '--new', dest='newNoteName', help='Start a new Note. Saves it in the -d directory')
 parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', help='List available tags')
 parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
+parser.add_argument('-lnt', '--list-notes-tags', dest='listNotesTags', action='store_true', help='List available notes and their tags')
 parser.add_argument('-t', '--tag-find', dest='tagToFind', help='Find all files with tag')
 args = parser.parse_args()
 
@@ -143,6 +144,9 @@ if args.listNotes:
     for note in sorted(availableNotes):
         print('* ' + makeMarkdownLink(note))
 
+if args.listNotesTags:
+    printAllFilesWithTags()
+
 if args.tagToFind:
     tagToFind = args.tagToFind
     if tagToFind[0] != '#':
@@ -153,4 +157,5 @@ if args.tagToFind:
         print('# ' + tagToFind + '\n')
         for file in filesOfTag[tagToFind]:
             print('* ' + makeMarkdownLink(file))
+
 
