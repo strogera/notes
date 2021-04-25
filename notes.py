@@ -119,10 +119,9 @@ parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true'
 parser.add_argument('-lnt', '--list-notes-tags', dest='listNotesTags', action='store_true', help='List available notes and their tags')
 parser.add_argument('-ltn', '--list-tags-notes', dest='listTagsNotes', action='store_true', help='List available notes per tag')
 parser.add_argument('-t', '--tag-find', dest='tagToFind', help='Find all files with tag')
+parser.add_argument('-f', '--find', dest='findTerm', help='Search in notes directory')
 args = parser.parse_args()
 
-#printAllFilesWithTags()
-#printAllFilesPerTag()
 if args.newNoteName:
     newNoteFullPath = args.directory + '/' + args.newNoteName
     print(newNoteFullPath)
@@ -162,4 +161,6 @@ if args.tagToFind:
         for file in filesOfTag[tagToFind]:
             print('* ' + makeMarkdownLink(file))
 
+if args.findTerm:
+    x = system('cd '+args.directory+' && rg -l -i '+ args.findTerm)
 
