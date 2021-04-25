@@ -4,47 +4,48 @@ from os import path
 from os import walk
 from collections import defaultdict
 
-parser = argparse.ArgumentParser(description='Manage your notes.')
-parser.add_argument('-d', '--directory', dest='directory', help='Specify the directory of the notes')
-args = parser.parse_args()
-if not path.exists(args.directory) or not path.isdir(args.directory):
-    print('Not a valid directory')
-    exit
-
-tagChars = '-_abcdefghijklmnopqrstuvwxyz0123456789'
 filesOfTag = defaultdict(list)
 tagsOfFile = defaultdict(list)
-
 untagged = 'untagged'
-for (dirpath, dirnames, filenames) in walk(args.directory):
-    for f in filenames:
-        if '.md' in f or '.txt' in f:
-            filename = dirpath + '/' + f
-            with open(filename, 'r') as note:
-                tagged = False 
-                for line in note:
-                    for i in range(len(line)):
-                        if line[i] == '#':
-                            try:
-                                if line[i+1] in tagChars:
-                                    tag = '#'
-                                    for x in line[i+1:]:
-                                        if x not in tagChars:
-                                            if tag !='#':
-                                                tag = tag.lower()
-                                                tagged = True
-                                                filesOfTag[tag].append(filename)
-                                                tagsOfFile[filename].append(tag)
-                                                break
-                                        else:
-                                            tag += x
-                                else:
-                                    continue
-                            except:
-                                pass
-                if not tagged:
-                    filesOfTag[untagged].append(filename)
-                    tagsOfFile[filename].append(untagged)
+tagChars = '-_abcdefghijklmnopqrstuvwxyz0123456789'
+
+def getTagsFromString(s):
+    tagsFound = []
+    tag = ''
+    i = 0
+    while i < len(s) - 1:
+        currentChar = s[i].lower()
+        nextChar = s[i+1].lower()
+
+        if not tag:
+            if currentChar == '#' and nextChar in tagChars:
+                tag = '#'
+        else:
+            if currentChar in tagChars:
+                tag += currentChar
+            else:
+                tagsFound.append(tag)
+                tag = ''
+        i += 1
+    if tag:
+        tagsFound.append(tag)
+    return tagsFound
+
+def findTagsInFile(fullpath):
+    with open(fullpath, 'r') as note:
+        tagged = False 
+        curTags = []
+        for line in note:
+            curTags += getTagsFromString(line)
+
+        if not curTags:
+            filesOfTag[untagged].append(fullpath)
+            tagsOfFile[fullpath].append(untagged)
+        else:
+            for tag in curTags:
+                filesOfTag[tag].append(fullpath)
+                tagsOfFile[fullpath].append(tag)
+
 
 def getFileNameFromPath(path):
     name = ''
@@ -55,6 +56,7 @@ def getFileNameFromPath(path):
             break
     return name[::-1]
 
+
 def removeExtension(filename):
     name = filename[::-1]
     for c in name:
@@ -63,26 +65,50 @@ def removeExtension(filename):
             break
     return name[::-1]
 
+
 def getFileNameFromPathNoExtention(filename):
     return getFileNameFromPath(removeExtension(filename))
 
-def makeMarkdownLink(filename):
-    return '['+getFileNameFromPathNoExtention(filename)+']('+filename.replace(' ', '%5C')+')'
-    return '['+getFileNameFromPathNoExtention(filename)+']('+filename.replace(' ', '%20')+')'
+
+def makeMarkdownLink(filename, espaceSpaces=True):
+    if espaceSpaces:
+        return '['+getFileNameFromPathNoExtention(filename)+']('+filename.replace(' ', '\\ ')+')'
+    else:
+        return '['+getFileNameFromPathNoExtention(filename)+']('+filename+')'
+
 
 def printAllFilesPerTag():
+    print('# Tag - Files List\n')
     for tag in filesOfTag:
-        print('# '+tag)
+        print('## '+tag)
         print()
-        for l in filesOfTag[tag]:
-            print('* '+ makeMarkdownLink(l))
+        uniqueFileList = set(filesOfTag[tag])
+        for f in uniqueFileList:
+            print('* '+ makeMarkdownLink(f))
         print()
 
 def printAllFilesWithTags():
+    print('# File - Tags List\n')
     for file in tagsOfFile:
-        print('# ', makeMarkdownLink(file))
-        for tag in tagsOfFile[file]:
-            print(tag)
+        print('## ', makeMarkdownLink(file))
+        uniqueTagList = set(tagsOfFile[file])
+        for tag in uniqueTagList:
+            print('* ' + tag)
         print()
 
-printAllFilesWithTags()
+parser = argparse.ArgumentParser(description='Manage your notes.')
+parser.add_argument('-d', '--directory', dest='directory', help='Specify the directory of the notes')
+args = parser.parse_args()
+if not path.exists(args.directory) or not path.isdir(args.directory):
+    print('Not a valid directory')
+    exit
+
+
+for (dirpath, dirnames, filenames) in walk(args.directory):
+    for f in filenames:
+        if '.md' in f or '.txt' in f:
+            fullpath = dirpath + '/' + f
+            findTagsInFile(fullpath)
+
+#printAllFilesWithTags()
+printAllFilesPerTag()
