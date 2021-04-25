@@ -54,7 +54,7 @@ def findTagsInFile(fullpath):
 def getFileNameFromPath(path):
     name = ''
     for c in path[::-1]:
-        if c!='/':
+        if c != '/':
             name += c
         else:
             break
@@ -108,7 +108,7 @@ def readNotesDirectory(args):
     for (dirpath, dirnames, filenames) in walk(args.directory):
         for f in filenames:
             if '.md' in f or '.txt' in f:
-                fullpath = dirpath + '/' + f
+                fullpath = dirpath + ('/' if dirpath[-1] != '/' else '') + f
                 findTagsInFile(fullpath)
 
 parser = argparse.ArgumentParser(description='Manage your notes.')
@@ -118,7 +118,7 @@ parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', 
 parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
 parser.add_argument('-lnt', '--list-notes-tags', dest='listNotesTags', action='store_true', help='List available notes and their tags')
 parser.add_argument('-ltn', '--list-tags-notes', dest='listTagsNotes', action='store_true', help='List available notes per tag')
-parser.add_argument('-t', '--tag-find', dest='tagToFind', help='Find all files with tag')
+parser.add_argument('-t', '--tag-find', dest='tagsToFind', nargs='*', help='Find all files with tag, a list of space seperated tags will search for notes that have all of them')
 parser.add_argument('-f', '--find', dest='findTerm', help='Search in notes directory')
 args = parser.parse_args()
 
@@ -150,15 +150,22 @@ if args.listNotesTags:
 if args.listTagsNotes:
     printAllFilesPerTag()
 
-if args.tagToFind:
-    tagToFind = args.tagToFind
-    if tagToFind[0] != '#':
-        tagToFind = '#' + tagToFind
-    if tagToFind not in filesOfTag:
-        print('Tag doesn\'t exist')
-    else:
-        print('# ' + tagToFind + '\n')
-        for file in filesOfTag[tagToFind]:
+if args.tagsToFind:
+    tagsToFind = args.tagsToFind
+    for i in range(len(tagsToFind)):
+        if tagsToFind[i][0] != '#':
+            tagsToFind[i] = '#' + tagsToFind[i]
+        if tagsToFind[i] not in filesOfTag:
+            print('Tag ' + tagsToFind[i] + ' doesn\'t exist')
+            exit()
+    print('# ' + '+'.join(tagsToFind) + '\n')
+    for file in tagsOfFile:
+        tagsFound=0
+        for tag in tagsToFind:
+            if tag not in tagsOfFile[file]:
+                break
+            tagsFound += 1
+        if tagsFound == len(tagsToFind):
             print('* ' + makeMarkdownLink(file))
 
 if args.findTerm:
