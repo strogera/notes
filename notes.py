@@ -111,63 +111,72 @@ def readNotesDirectory(args):
                 fullpath = dirpath + ('/' if dirpath[-1] != '/' else '') + f
                 findTagsInFile(fullpath)
 
-parser = argparse.ArgumentParser(description='Manage your notes.')
-parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
-parser.add_argument('-n', '--new', dest='newNoteName', help='Start a new Note. Saves it in the -d directory')
-parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', help='List available tags')
-parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
-parser.add_argument('-lnt', '--list-notes-tags', dest='listNotesTags', action='store_true', help='List available notes and their tags')
-parser.add_argument('-ltn', '--list-tags-notes', dest='listTagsNotes', action='store_true', help='List available notes per tag')
-parser.add_argument('-t', '--tag-find', dest='tagsToFind', nargs='*', help='Find all files with tag, a list of space seperated tags will search for notes that have all of them')
-parser.add_argument('-f', '--find', dest='findTerm', help='Search in notes directory')
-args = parser.parse_args()
+def parseArgumens():
+    parser = argparse.ArgumentParser(description='Manage your notes.')
+    parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
+    parser.add_argument('-n', '--new', dest='newNoteName', help='Start a new Note. Saves it in the -d directory')
+    parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', help='List available tags')
+    parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
+    parser.add_argument('-lnt', '--list-notes-tags', dest='listNotesTags', action='store_true', help='List available notes and their tags')
+    parser.add_argument('-ltn', '--list-tags-notes', dest='listTagsNotes', action='store_true', help='List available notes per tag')
+    parser.add_argument('-t', '--tag-find', dest='tagsToFind', nargs='*', help='Find all files with tag, a list of space seperated tags will search for notes that have all of them')
+    parser.add_argument('-f', '--find', dest='findTerm', help='Search in notes directory')
+    args = parser.parse_args()
+    return args
 
-if args.newNoteName:
-    newNoteFullPath = args.directory + '/' + args.newNoteName
-    print(newNoteFullPath)
-    with open(newNoteFullPath, 'w') as newNote:
-        newNote.write('# ' + args.newNoteName)
-    system('vim ' + newNoteFullPath) 
-readNotesDirectory(args)
+def handleArguments(args):
+    if args.newNoteName:
+        newNoteFullPath = args.directory + '/' + args.newNoteName
+        print(newNoteFullPath)
+        with open(newNoteFullPath, 'w') as newNote:
+            newNote.write('# ' + args.newNoteName)
+        system('vim ' + newNoteFullPath) 
+    readNotesDirectory(args)
 
-if args.listTags:
-    print("# Available tags\n")
-    availableTags = list(filesOfTag.keys())
-    for tag in sorted(availableTags):
-        if tag == untagged:
-            continue
-        print('* ' + tag)
+    if args.listTags:
+        print("# Available tags\n")
+        availableTags = list(filesOfTag.keys())
+        for tag in sorted(availableTags):
+            if tag == untagged:
+                continue
+            print('* ' + tag)
 
-if args.listNotes:
-    print("# Available notes\n")
-    availableNotes = list(tagsOfFile.keys())
-    for note in sorted(availableNotes):
-        print('* ' + makeMarkdownLink(note))
+    if args.listNotes:
+        print("# Available notes\n")
+        availableNotes = list(tagsOfFile.keys())
+        for note in sorted(availableNotes):
+            print('* ' + makeMarkdownLink(note))
 
-if args.listNotesTags:
-    printAllFilesWithTags()
+    if args.listNotesTags:
+        printAllFilesWithTags()
 
-if args.listTagsNotes:
-    printAllFilesPerTag()
+    if args.listTagsNotes:
+        printAllFilesPerTag()
 
-if args.tagsToFind:
-    tagsToFind = args.tagsToFind
-    for i in range(len(tagsToFind)):
-        if tagsToFind[i][0] != '#':
-            tagsToFind[i] = '#' + tagsToFind[i]
-        if tagsToFind[i] not in filesOfTag:
-            print('Tag ' + tagsToFind[i] + ' doesn\'t exist')
-            exit()
-    print('# ' + '+'.join(tagsToFind) + '\n')
-    for file in tagsOfFile:
-        tagsFound=0
-        for tag in tagsToFind:
-            if tag not in tagsOfFile[file]:
-                break
-            tagsFound += 1
-        if tagsFound == len(tagsToFind):
-            print('* ' + makeMarkdownLink(file))
+    if args.tagsToFind:
+        tagsToFind = args.tagsToFind
+        for i in range(len(tagsToFind)):
+            if tagsToFind[i][0] != '#':
+                tagsToFind[i] = '#' + tagsToFind[i].lower()
+            if tagsToFind[i] not in filesOfTag:
+                print('Tag ' + tagsToFind[i] + ' doesn\'t exist')
+                exit()
+        print('# ' + '+'.join(tagsToFind) + '\n')
+        for file in tagsOfFile:
+            tagsFound=0
+            for tag in tagsToFind:
+                if tag not in tagsOfFile[file]:
+                    break
+                tagsFound += 1
+            if tagsFound == len(tagsToFind):
+                print('* ' + makeMarkdownLink(file))
 
-if args.findTerm:
-    x = system('cd '+args.directory+' && rg -l -i '+ args.findTerm)
+    if args.findTerm:
+        x = system('cd '+args.directory+' && rg -l -i '+ args.findTerm)
 
+def main():
+    args = parseArgumens()
+    handleArguments(args)
+
+if __name__ == "__main__":
+    main()
