@@ -115,6 +115,7 @@ def readNotesDirectory(args):
 def parseArgumens():
     parser = argparse.ArgumentParser(description='Manage your notes.')
     parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
+    parser.add_argument('-o', '--open', dest='openDirectory', action='store_true', help='Open directory in ranger')
     parser.add_argument('-n', '--new', dest='newNoteName', nargs='?', const=defaultNewFileName, help='Start a new Note. Saves it in the -d directory')
     parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', help='List available tags')
     parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
@@ -133,6 +134,9 @@ def handleArguments(args):
             newNote.write(timestamp +'\n\n')
         system('vim +3 ' + newNoteFullPath) 
     readNotesDirectory(args)
+
+    if args.openDirectory:
+        system('cd ' + args.directory + ' && ranger')
 
     if args.listTags:
         print("# Available tags\n")
