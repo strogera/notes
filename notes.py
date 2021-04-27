@@ -130,8 +130,8 @@ def handleArguments(args):
         newNoteFullPath = args.directory + '/' + args.newNoteName + '.md'
         with open(newNoteFullPath, 'w') as newNote:
             newNote.write('# ' + args.newNoteName + '\n')
-            newNote.write(timestamp)
-        system('vim ' + newNoteFullPath) 
+            newNote.write(timestamp +'\n')
+        system('vim +3' + newNoteFullPath) 
     readNotesDirectory(args)
 
     if args.listTags:
