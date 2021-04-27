@@ -11,7 +11,8 @@ tagsOfFile = defaultdict(list)
 untagged = 'untagged'
 tagChars = '-_abcdefghijklmnopqrstuvwxyz0123456789'
 time = datetime.now()
-defaultNewFileName = time.strftime("%d/%m/%Y-%H:%M:%S")
+defaultNewFileName = time.strftime("%d-%m-%Y@%H%M%S")
+timestamp = time.strftime("%d/%m/%Y %H:%M:%S")
 
 def getTagsFromString(s):
     tagsFound = []
@@ -114,7 +115,7 @@ def readNotesDirectory(args):
 def parseArgumens():
     parser = argparse.ArgumentParser(description='Manage your notes.')
     parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
-    parser.add_argument('-n', '--new', dest='newNoteName', help='Start a new Note. Saves it in the -d directory')
+    parser.add_argument('-n', '--new', dest='newNoteName', nargs='?', const=defaultNewFileName, help='Start a new Note. Saves it in the -d directory')
     parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', help='List available tags')
     parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
     parser.add_argument('-lnt', '--list-notes-tags', dest='listNotesTags', action='store_true', help='List available notes and their tags')
@@ -126,10 +127,10 @@ def parseArgumens():
 
 def handleArguments(args):
     if args.newNoteName:
-        newNoteFullPath = args.directory + '/' + args.newNoteName
-        print(newNoteFullPath)
+        newNoteFullPath = args.directory + '/' + args.newNoteName + '.md'
         with open(newNoteFullPath, 'w') as newNote:
-            newNote.write('# ' + args.newNoteName)
+            newNote.write('# ' + args.newNoteName + '\n')
+            newNote.write(timestamp)
         system('vim ' + newNoteFullPath) 
     readNotesDirectory(args)
 
