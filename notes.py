@@ -37,7 +37,7 @@ def getTagsFromString(s):
     return tagsFound
 
 def findTagsInFile(fullpath):
-    with open(fullpath, 'r') as note:
+    with open(fullpath, 'r', encoding='utf-8') as note:
         tagged = False 
         curTags = []
         for line in note:
@@ -129,6 +129,8 @@ def parseArgumens():
 def handleArguments(args):
     if args.newNoteName:
         newNoteFullPath = args.directory + '/' + args.newNoteName + '.md'
+        print(newNoteFullPath)
+        sleep(4)
         with open(newNoteFullPath, 'w') as newNote:
             newNote.write('# ' + args.newNoteName + '\n')
             newNote.write(timestamp +'\n\n')
