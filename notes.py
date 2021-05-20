@@ -116,6 +116,7 @@ def parseArgumens():
     parser = argparse.ArgumentParser(description='Manage your notes.')
     parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
     parser.add_argument('-o', '--open', dest='openWithProgram', help='Open directory in <program>')
+    parser.add_argument('-e', '--editor', dest='editor', default='vim +3 ', help='Set editor, default vim')
     parser.add_argument('-n', '--new', dest='newNoteName', nargs='?', const=defaultNewFileName, help='Start a new Note. Saves it in the -d directory')
     parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', help='List available tags')
     parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
@@ -129,18 +130,16 @@ def parseArgumens():
 def handleArguments(args):
     if args.newNoteName:
         newNoteFullPath = args.directory + '/' + args.newNoteName + '.md'
-        print(newNoteFullPath)
-        sleep(4)
         with open(newNoteFullPath, 'w') as newNote:
             newNote.write('# ' + args.newNoteName + '\n')
             newNote.write(timestamp +'\n\n')
-        system('vim +3 ' + newNoteFullPath) 
+        system(args.editor + ' ' + newNoteFullPath) 
     readNotesDirectory(args)
 
     if args.openWithProgram:
         #system('cd ' + args.directory + ' && ' + args.openWithProgram)
         system(args.openWithProgram + ' ' + args.directory)
-
+    
     if args.listTags:
         print("# Available tags\n")
         availableTags = list(filesOfTag.keys())
