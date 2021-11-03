@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
+import tkinter.font as tkFont
 
 
 
@@ -12,6 +13,7 @@ class MainWindowManager():
         content.pack(fill = 'both', expand = True)
 
 
+        
         # Directory Info Area
         infoFrame = tk.Frame(content)
         fr_buttons = tk.Frame(infoFrame, relief=tk.RAISED, bd=2)
@@ -25,13 +27,14 @@ class MainWindowManager():
         infoFrame.pack(side = 'top', fill = 'both')
 
         # Text Area
+        self.textFont = tkFont.Font(family="Calibri", size=16)
         openFileFrame = tk.Frame(content) 
         fileButtonsFrame = tk.Frame(openFileFrame)
         openInEditorBtn = tk.Button(fileButtonsFrame, text = "Open in Editor")
         openInEditorBtn.pack(side = "left")
-        zoomPlus = tk.Button(fileButtonsFrame, text = "+")
+        zoomPlus = tk.Button(fileButtonsFrame, text = "+", command = self.increaseFontSize)
         zoomPlus.pack(side = "right")
-        zoomMinus = tk.Button(fileButtonsFrame, text = "-")
+        zoomMinus = tk.Button(fileButtonsFrame, text = "-", command = self.decreaseFontSize)
         zoomMinus.pack(side = "right")
         newNoteBtn = tk.Button(fileButtonsFrame, text = "Add New Note")
         newNoteBtn.pack(side = "left")
@@ -48,7 +51,7 @@ class MainWindowManager():
 
         fileButtonsFrame.pack(side = 'top', fill = 'x')
         tagsFrame.pack(side = 'top', fill = 'x')
-        self.openFileArea = tk.Text(openFileFrame)
+        self.openFileArea = tk.Text(openFileFrame, font = self.textFont)
         self.openFileArea.pack(side = 'top', fill = 'both', expand = True)
         textScrollBar = tk.Scrollbar(content, command=self.openFileArea.yview)
         self.openFileArea['yscrollcommand'] = textScrollBar.set
@@ -129,6 +132,13 @@ class MainWindowManager():
         self.openFileArea.delete(1.0, "end")
         self.openFileArea.insert(1.0, textToDisplay)
         self.openFileArea.config(state = "disabled")
+
+    def increaseFontSize(self):
+        self.textFont.configure(size = self.textFont['size']+2) 
+
+    def decreaseFontSize(self):
+        self.textFont.configure(size = self.textFont['size']-2) 
+
 
 if __name__ == "__main__":
     window = tk.Tk()
