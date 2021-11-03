@@ -1,9 +1,11 @@
 import os
+import re
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 import tkinter.font as tkFont
 import subprocess, platform
+from datetime import datetime
 
 
 
@@ -11,7 +13,8 @@ preferencesFile = './preferences.py'
 defaultDirPrefKey = 'defaultDir' 
 
 class MainWindowManager():
-    def __init__(self):
+    def __init__(self, root):
+        self.root = root
         self.preferences = {}
         if os.path.exists(preferencesFile):
             with open(preferencesFile, 'r') as prefInput:
@@ -54,7 +57,7 @@ class MainWindowManager():
         zoomMinus.pack(side = "right")
         self.refreshFile = tk.Button(fileButtonsFrame, text = "Reload File", command = self.loadFile, state = 'disabled')
         self.refreshFile.pack(side = "right")
-        newNoteBtn = tk.Button(fileButtonsFrame, text = "Add New Note")
+        newNoteBtn = tk.Button(fileButtonsFrame, text = "Add New Note", command = self.newNoteWindow)
         newNoteBtn.pack(side = "left")
         tagsFrame = tk.Frame(openFileFrame)
         tk.Label(tagsFrame, text = "TagList: ").pack(side = 'left')
@@ -200,12 +203,68 @@ class MainWindowManager():
         self.setPreviewText(''.join(open(fullPath, 'r', encoding = "utf-8", errors = "ignore").readlines()))
         self.fileNameLabel.configure(text = fileName)
 
+    def newNoteWindow(self):
+        self.newNoteWindowToplevel = tk.Toplevel()
+        self.newNoteWindowToplevel.attributes("-topmost", True)
+        self.newNoteWindowToplevel.bind('<Return>', self.makeNewNoteCustomName)
+
+        #windowContent = tk.Frame(self.newNoteWindowToplevel)
+        customNameFrame = tk.Frame(self.newNoteWindowToplevel)
+        #customNameFrame = tk.Frame(windowContent)
+        customNameFrame.pack(side = 'top')
+        self.newNoteName = tk.Text(customNameFrame, width = 30,  height = 1)
+        self.newNoteName.focus_set()
+        self.newNoteName.pack(side = "left",  fill = 'x')
+        okBtn = tk.Button(customNameFrame, text = "OK", command = self.makeNewNoteCustomName)
+        okBtn.pack(side = 'left')
+        customNameFrame.pack(side = 'top')
+        #timestampBtn = tk.Button(windowContent, text = "TimeStamp As Title", command = self.makeNewNoteDefaultName)
+        timestampBtn = tk.Button(self.newNoteWindowToplevel, text = "TimeStamp As Title", command = self.makeNewNoteDefaultName)
+        timestampBtn.pack(side = 'top')
+
+        w = self.newNoteWindowToplevel.winfo_reqwidth()
+        h = self.newNoteWindowToplevel.winfo_reqheight()
+        ws = self.newNoteWindowToplevel.winfo_screenwidth()
+        hs = self.newNoteWindowToplevel.winfo_screenheight()
+        x = (ws/2) - (w/2)
+        y = (hs/2) - (h/2)
+        self.newNoteWindowToplevel.geometry('%dx%d+%d+%d' % (300, 60, x, y))
+        self.newNoteWindowToplevel.title("New Note")
+        self.newNoteWindowToplevel.focus_force()
+
+    def makeNewNoteDefaultName(self):
+        time = datetime.now()
+        name = time.strftime("%d-%m-%Y@%H%M%S") + '.md'
+        self.makeNewNote(name)
+        self.newNoteWindowToplevel.destroy() 
+        self.setupFileTree()
+        self.setPreviewText(''.join(open(os.path.join(self.curNotesPath, name), 'r', encoding = "utf-8", errors = "ignore").readlines()))
+
+    def makeNewNoteCustomName(self, event = None):
+        name = self.newNoteName.get(1.0, 'end-1c')
+        name = os.path.normpath(name.replace('\n', '')) + '.md'
+        if name != "":
+            self.makeNewNote(name)
+        self.newNoteWindowToplevel.destroy() 
+        self.setupFileTree()
+        if name != "":
+            self.setPreviewText(''.join(open(os.path.join(self.curNotesPath, name)).readlines()))
+
+    def makeNewNote(self, name):
+        time = datetime.now()
+        timestamp = time.strftime("%d/%m/%Y %H:%M:%S")
+        with open(os.path.join(self.curNotesPath, name), 'w') as newNote:
+            newNote.write('# ' + name + '\n')
+            newNote.write(timestamp +'\n\n')
+
+
+
 
 if __name__ == "__main__":
     window = tk.Tk()
 
     window.title("Notes")
-    MainWindowManager()
+    MainWindowManager(window)
 
     window.mainloop()
 
