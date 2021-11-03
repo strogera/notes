@@ -138,7 +138,11 @@ class MainWindowManager():
                 self.processDirectory(oid, abspath)
 
     def getFullPathOfTreeSelection(self):
-        selection = self.tree.selection()[0]
+        try:
+            selection = self.tree.selection()[0]
+        except IndexError:
+            return self.curNotesPath, ''
+
         item = selection
         fullPath = "" 
         while item != "":
