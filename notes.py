@@ -46,6 +46,8 @@ class MainWindowManager():
         fileButtonsFrame = tk.Frame(openFileFrame)
         openInEditorBtn = tk.Button(fileButtonsFrame, text = "Open in Editor", command = self.openFile)
         openInEditorBtn.pack(side = "left")
+        openContainingFolder = tk.Button(fileButtonsFrame, text = "Open Containing Folder", command = self.openDir)
+        openContainingFolder.pack(side = "left")
         zoomPlus = tk.Button(fileButtonsFrame, text = "+", command = self.increaseFontSize)
         zoomPlus.pack(side = "right")
         zoomMinus = tk.Button(fileButtonsFrame, text = "-", command = self.decreaseFontSize)
@@ -166,6 +168,17 @@ class MainWindowManager():
         self.preferences[defaultDirPrefKey] = self.curNotesPath
         with open(preferencesFile, 'w') as prefFile:
             prefFile.write(str(self.preferences))
+
+    def openDir(self):
+        filepath = self.curNotesPath
+        if filepath == "":
+            return
+        if platform.system() == 'Darwin':       # macOS
+            subprocess.call(('open', filepath))
+        elif platform.system() == 'Windows':    # Windows
+            os.startfile(filepath)
+        else:                                   # linux variants
+            subprocess.call(('xdg-open', filepath))
 
     def openFile(self):
         filepath, _ = self.getFullPathOfTreeSelection()
