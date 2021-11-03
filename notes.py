@@ -41,6 +41,8 @@ class MainWindowManager():
         # Text Area
         self.textFont = tkFont.Font(family="Calibri", size=16)
         openFileFrame = tk.Frame(content) 
+        self.fileNameLabel = tk.Label(openFileFrame, text = "", font = self.textFont)
+        self.fileNameLabel.pack(side = 'top', fill = 'x')
         fileButtonsFrame = tk.Frame(openFileFrame)
         openInEditorBtn = tk.Button(fileButtonsFrame, text = "Open in Editor", command = self.openFile)
         openInEditorBtn.pack(side = "left")
@@ -48,7 +50,7 @@ class MainWindowManager():
         zoomPlus.pack(side = "right")
         zoomMinus = tk.Button(fileButtonsFrame, text = "-", command = self.decreaseFontSize)
         zoomMinus.pack(side = "right")
-        self.refreshFile = tk.Button(fileButtonsFrame, text = "Reload File", command = self.reloadFile, state = 'disabled')
+        self.refreshFile = tk.Button(fileButtonsFrame, text = "Reload File", command = self.loadFile, state = 'disabled')
         self.refreshFile.pack(side = "right")
         newNoteBtn = tk.Button(fileButtonsFrame, text = "Add New Note")
         newNoteBtn.pack(side = "left")
@@ -131,7 +133,8 @@ class MainWindowManager():
                 self.processDirectory(oid, abspath)
 
     def getFullPathOfTreeSelection(self):
-        item = self.tree.selection()[0]
+        selection = self.tree.selection()[0]
+        item = selection
         fullPath = "" 
         while item != "":
             parent = self.tree.item(item)['text']
@@ -140,14 +143,10 @@ class MainWindowManager():
             else:
                 fullPath = os.path.join(parent, fullPath) 
             item = self.tree.parent(item)
-        return fullPath
+        return fullPath, self.tree.item(selection)['text']
 
     def onFileTreeDoubleClick(self, event):
-        fullPath = self.getFullPathOfTreeSelection()
-
-        if os.path.isdir(fullPath):
-            return
-        self.setPreviewText(''.join(open(fullPath, 'r', encoding = "utf-8", errors = "ignore").readlines()))
+        self.loadFile()
 
     def setPreviewText(self, textToDisplay):
         self.openFileArea.config(state = "normal")
@@ -169,7 +168,7 @@ class MainWindowManager():
             prefFile.write(str(self.preferences))
 
     def openFile(self):
-        filepath = self.getFullPathOfTreeSelection()
+        filepath, _ = self.getFullPathOfTreeSelection()
         if platform.system() == 'Darwin':       # macOS
             subprocess.call(('open', filepath))
         elif platform.system() == 'Windows':    # Windows
@@ -177,12 +176,13 @@ class MainWindowManager():
         else:                                   # linux variants
             subprocess.call(('xdg-open', filepath))
 
-    def reloadFile(self):
-        fullPath = self.getFullPathOfTreeSelection()
+    def loadFile(self):
+        fullPath, fileName = self.getFullPathOfTreeSelection()
 
         if os.path.isdir(fullPath):
             return
         self.setPreviewText(''.join(open(fullPath, 'r', encoding = "utf-8", errors = "ignore").readlines()))
+        self.fileNameLabel.configure(text = fileName)
 
 
 if __name__ == "__main__":
