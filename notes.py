@@ -170,7 +170,10 @@ class MainWindowManager():
             prefFile.write(str(self.preferences))
 
     def openDir(self):
-        filepath = self.curNotesPath
+        if self.curNotesPath == "":
+            return
+        filepath, fileName = self.getFullPathOfTreeSelection()
+        filepath = filepath.removesuffix(fileName)
         if filepath == "":
             return
         if platform.system() == 'Darwin':       # macOS
