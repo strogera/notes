@@ -3,6 +3,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 import tkinter.font as tkFont
+import subprocess, platform
 
 
 
@@ -41,12 +42,14 @@ class MainWindowManager():
         self.textFont = tkFont.Font(family="Calibri", size=16)
         openFileFrame = tk.Frame(content) 
         fileButtonsFrame = tk.Frame(openFileFrame)
-        openInEditorBtn = tk.Button(fileButtonsFrame, text = "Open in Editor")
+        openInEditorBtn = tk.Button(fileButtonsFrame, text = "Open in Editor", command = self.openFile)
         openInEditorBtn.pack(side = "left")
         zoomPlus = tk.Button(fileButtonsFrame, text = "+", command = self.increaseFontSize)
         zoomPlus.pack(side = "right")
         zoomMinus = tk.Button(fileButtonsFrame, text = "-", command = self.decreaseFontSize)
         zoomMinus.pack(side = "right")
+        self.refreshFile = tk.Button(fileButtonsFrame, text = "Reload File", command = self.reloadFile, state = 'disabled')
+        self.refreshFile.pack(side = "right")
         newNoteBtn = tk.Button(fileButtonsFrame, text = "Add New Note")
         newNoteBtn.pack(side = "left")
         tagsFrame = tk.Frame(openFileFrame)
@@ -127,7 +130,7 @@ class MainWindowManager():
             if isdir:
                 self.processDirectory(oid, abspath)
 
-    def onFileTreeDoubleClick(self, event):
+    def getFullPathOfTreeSelection(self):
         item = self.tree.selection()[0]
         fullPath = "" 
         while item != "":
@@ -137,6 +140,10 @@ class MainWindowManager():
             else:
                 fullPath = os.path.join(parent, fullPath) 
             item = self.tree.parent(item)
+        return fullPath
+
+    def onFileTreeDoubleClick(self, event):
+        fullPath = self.getFullPathOfTreeSelection()
 
         if os.path.isdir(fullPath):
             return
@@ -147,6 +154,7 @@ class MainWindowManager():
         self.openFileArea.delete(1.0, "end")
         self.openFileArea.insert(1.0, textToDisplay)
         self.openFileArea.config(state = "disabled")
+        self.refreshFile.configure(state = 'normal')
 
     def increaseFontSize(self):
         self.textFont.configure(size = self.textFont['size']+2) 
@@ -159,6 +167,22 @@ class MainWindowManager():
         self.preferences[defaultDirPrefKey] = self.curNotesPath
         with open(preferencesFile, 'w') as prefFile:
             prefFile.write(str(self.preferences))
+
+    def openFile(self):
+        filepath = self.getFullPathOfTreeSelection()
+        if platform.system() == 'Darwin':       # macOS
+            subprocess.call(('open', filepath))
+        elif platform.system() == 'Windows':    # Windows
+            os.startfile(filepath)
+        else:                                   # linux variants
+            subprocess.call(('xdg-open', filepath))
+
+    def reloadFile(self):
+        fullPath = self.getFullPathOfTreeSelection()
+
+        if os.path.isdir(fullPath):
+            return
+        self.setPreviewText(''.join(open(fullPath, 'r', encoding = "utf-8", errors = "ignore").readlines()))
 
 
 if __name__ == "__main__":
