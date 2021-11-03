@@ -6,9 +6,20 @@ import tkinter.font as tkFont
 
 
 
+preferencesFile = './preferences.py'
+defaultDirPrefKey = 'defaultDir' 
+
 class MainWindowManager():
     def __init__(self):
+        self.preferences = {}
+        if os.path.exists(preferencesFile):
+            with open(preferencesFile, 'r') as prefInput:
+                self.preferences = eval(prefInput.read())
+
         self.curNotesPath = ''
+        if defaultDirPrefKey in self.preferences:
+            self.curNotesPath = self.preferences[defaultDirPrefKey]
+
         content = tk.Frame(window)
         content.pack(fill = 'both', expand = True)
 
@@ -22,8 +33,8 @@ class MainWindowManager():
         fr_buttons.grid()
         btn_open.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
         self.currentDirLabel.grid(row=0, column=1, sticky="ew", padx=5)
-        setDefaultBtn = tk.Button(fr_buttons, text = "Set as Default")
-        setDefaultBtn.grid(row=0, column=2, sticky="ew", padx=5)
+        self.setDefaultBtn = tk.Button(fr_buttons, text = "Set as Default", command = self.setDefaultNotesDir, state = 'disabled')
+        self.setDefaultBtn.grid(row=0, column=2, sticky="ew", padx=5)
         infoFrame.pack(side = 'top', fill = 'both')
 
         # Text Area
@@ -92,6 +103,10 @@ class MainWindowManager():
         window.title(f"Notes - {filepath}")
         self.currentDirLabel.configure(text = "Current Directory: " + self.curNotesPath)
         self.setupFileTree()
+        if self.preferences[defaultDirPrefKey] != self.curNotesPath:
+            self.setDefaultBtn.configure(state = 'normal')
+        else:
+            self.setDefaultBtn.configure(state = 'disabled')
 
     def setupFileTree(self):
         if self.curNotesPath == "":
@@ -138,6 +153,12 @@ class MainWindowManager():
 
     def decreaseFontSize(self):
         self.textFont.configure(size = self.textFont['size']-2) 
+
+    def setDefaultNotesDir(self):
+        self.setDefaultBtn.configure(state = 'disabled')
+        self.preferences[defaultDirPrefKey] = self.curNotesPath
+        with open(preferencesFile, 'w') as prefFile:
+            prefFile.write(str(self.preferences))
 
 
 if __name__ == "__main__":
