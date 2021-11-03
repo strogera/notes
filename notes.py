@@ -1,189 +1,104 @@
-import argparse
-import sys
-from os import path
-from os import walk
-from os import system
-from collections import defaultdict
-from datetime import datetime
+import os
+import tkinter as tk
+import tkinter.ttk as ttk
+from tkinter import filedialog
 
-filesOfTag = defaultdict(list)
-tagsOfFile = defaultdict(list)
-untagged = 'untagged'
-tagChars = '-_abcdefghijklmnopqrstuvwxyz0123456789'
-time = datetime.now()
-defaultNewFileName = time.strftime("%d-%m-%Y@%H%M%S")
-timestamp = time.strftime("%d/%m/%Y %H:%M:%S")
 
-def getTagsFromString(s):
-    tagsFound = []
-    tag = ''
-    i = 0
-    while i < len(s) - 1:
-        currentChar = s[i].lower()
-        nextChar = s[i+1].lower()
 
-        if not tag:
-            if currentChar == '#' and nextChar in tagChars:
-                tag = '#'
-        else:
-            if currentChar in tagChars:
-                tag += currentChar
+class MainWindowManager():
+    def __init__(self):
+        self.curNotesPath = ''
+        content = tk.Frame(window)
+        content.pack(fill = 'both', expand = True)
+
+
+        # Directory Info Area
+        infoFrame = tk.Frame(content)
+        fr_buttons = tk.Frame(infoFrame, relief=tk.RAISED, bd=2)
+        btn_open = tk.Button(fr_buttons, text="Open Notes Directory", command=self.openDir)
+        self.currentDirLabel = tk.Label(infoFrame, text = self.curNotesPath)
+        fr_buttons.grid()
+        btn_open.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+        self.currentDirLabel.grid(row=0, column=1, sticky="ew", padx=5)
+        infoFrame.pack(side = 'top', fill = 'both')
+
+        # Text Area
+        self.openFileArea = tk.Text(content)
+        textScrollBar = tk.Scrollbar(content, command=self.openFileArea.yview)
+        self.openFileArea['yscrollcommand'] = textScrollBar.set
+        textScrollBar.pack(side = 'right', fill = 'y')
+        self.openFileArea.pack(side = 'right', fill = 'both', expand = True)
+
+
+        # File Tree Area
+        self.fileTreeFrame = tk.Frame(content)
+        self.fileTreeFrame.pack(side = 'left', fill = 'both', expand = True)
+        yFrame = tk.Frame(self.fileTreeFrame)
+        self.tree = ttk.Treeview(yFrame)
+        ysb = ttk.Scrollbar(yFrame, orient='vertical', command=self.tree.yview)
+        self.tree.configure(yscrollcommand=ysb.set)
+        self.tree.heading('#0', text=self.curNotesPath, anchor='w')
+        self.tree.bind("<Double-1>", self.onFileTreeDoubleClick)
+        self.tree.pack(side = 'left', fill = 'both', expand = True)
+        ysb.pack(side = 'left', fill = 'y')
+        yFrame.pack(side = 'top', fill = 'both', expand = True)
+        self.setupFileTree()
+
+    def openDir(self):
+        filepath = filedialog.askdirectory()
+        if not filepath:
+            return
+        self.curNotesPath = filepath
+        window.title(f"Notes - {filepath}")
+        self.currentDirLabel.configure(text = "Current Directory: " + self.curNotesPath)
+        self.setupFileTree()
+
+    def setupFileTree(self):
+        if self.curNotesPath == "":
+            return
+        
+        self.tree.delete(*self.tree.get_children())
+
+        abspath = os.path.abspath(self.curNotesPath)
+        root_node = self.tree.insert('', 'end', text=abspath, open=True)
+        self.processDirectory(root_node, abspath)
+        
+
+    def processDirectory(self, parent, path):
+        for p in os.listdir(path):
+            abspath = os.path.join(path, p)
+            isdir = os.path.isdir(abspath)
+            oid = self.tree.insert(parent, 'end', text=p, open=False)
+            if isdir:
+                self.processDirectory(oid, abspath)
+
+    def onFileTreeDoubleClick(self, event):
+        item = self.tree.selection()[0]
+        fullPath = "" 
+        while item != "":
+            parent = self.tree.item(item)['text']
+            if fullPath == "":
+                fullPath = parent
             else:
-                tagsFound.append(tag)
-                tag = ''
-        i += 1
-    if tag:
-        tagsFound.append(tag)
-    return tagsFound
+                fullPath = os.path.join(parent, fullPath) 
+            item = self.tree.parent(item)
 
-def findTagsInFile(fullpath):
-    with open(fullpath, 'r', encoding='utf-8') as note:
-        tagged = False 
-        curTags = []
-        for line in note:
-            curTags += getTagsFromString(line)
+        if os.path.isdir(fullPath):
+            return
+        self.setPreviewText(''.join(open(fullPath, 'r', encoding = "utf-8", errors = "ignore").readlines()))
 
-        if not curTags:
-            filesOfTag[untagged].append(fullpath)
-            tagsOfFile[fullpath].append(untagged)
-        else:
-            for tag in curTags:
-                filesOfTag[tag].append(fullpath)
-                tagsOfFile[fullpath].append(tag)
-
-
-def getFileNameFromPath(path):
-    name = ''
-    for c in path[::-1]:
-        if c != '/':
-            name += c
-        else:
-            break
-    return name[::-1]
-
-
-def removeExtension(filename):
-    name = filename[::-1]
-    for c in name:
-        name = name[1:]
-        if c == '.':
-            break
-    return name[::-1]
-
-
-def getFileNameFromPathNoExtention(filename):
-    return getFileNameFromPath(removeExtension(filename))
-
-
-def makeMarkdownLink(filename, espaceSpaces=True):
-    if espaceSpaces:
-        return '['+getFileNameFromPathNoExtention(filename)+']('+filename.replace(' ', '\\ ')+')'
-    else:
-        return '['+getFileNameFromPathNoExtention(filename)+']('+filename+')'
-
-
-def printAllFilesPerTag():
-    print('# Tag - Files List\n')
-    for tag in filesOfTag:
-        print('## '+tag)
-        print()
-        uniqueFileList = set(filesOfTag[tag])
-        for f in uniqueFileList:
-            print('* '+ makeMarkdownLink(f))
-        print()
-
-def printAllFilesWithTags():
-    print('# File - Tags List\n')
-    for file in tagsOfFile:
-        print('## ', makeMarkdownLink(file))
-        uniqueTagList = set(tagsOfFile[file])
-        for tag in uniqueTagList:
-            print('* ' + tag)
-        print()
-
-def readNotesDirectory(args):
-    if not path.exists(args.directory) or not path.isdir(args.directory):
-        print('Not a valid directory')
-        exit
-
-    for (dirpath, dirnames, filenames) in walk(args.directory):
-        for f in filenames:
-            if '.md' in f or '.txt' in f:
-                fullpath = dirpath + ('/' if dirpath[-1] != '/' else '') + f
-                findTagsInFile(fullpath)
-
-def parseArgumens():
-    parser = argparse.ArgumentParser(description='Manage your notes.')
-    parser.add_argument('-d', '--directory', dest='directory', required=True, help='Specify the directory of the notes')
-    parser.add_argument('-o', '--open', dest='openWithProgram', help='Open directory in <program>')
-    parser.add_argument('-e', '--editor', dest='editor', default='vim +3 ', help='Set editor, default vim')
-    parser.add_argument('-n', '--new', dest='newNoteName', nargs='?', const=defaultNewFileName, help='Start a new Note. Saves it in the -d directory')
-    parser.add_argument('-lt', '--list-tags', dest='listTags', action='store_true', help='List available tags')
-    parser.add_argument('-ln', '--list-notes', dest='listNotes', action='store_true', help='List available notes')
-    parser.add_argument('-lnt', '--list-notes-tags', dest='listNotesTags', action='store_true', help='List available notes and their tags')
-    parser.add_argument('-ltn', '--list-tags-notes', dest='listTagsNotes', action='store_true', help='List available notes per tag')
-    parser.add_argument('-t', '--tag-find', dest='tagsToFind', nargs='*', help='Find all files with tag, a list of space seperated tags will search for notes that have all of them')
-    parser.add_argument('-f', '--find', dest='findTerm', help='Search in notes directory')
-    args = parser.parse_args()
-    return args
-
-def handleArguments(args):
-    if args.newNoteName:
-        newNoteFullPath = args.directory + '/' + args.newNoteName + '.md'
-        with open(newNoteFullPath, 'w') as newNote:
-            newNote.write('# ' + args.newNoteName + '\n')
-            newNote.write(timestamp +'\n\n')
-        system(args.editor + ' ' + newNoteFullPath) 
-    readNotesDirectory(args)
-
-    if args.openWithProgram:
-        #system('cd ' + args.directory + ' && ' + args.openWithProgram)
-        system(args.openWithProgram + ' ' + args.directory)
-    
-    if args.listTags:
-        print("# Available tags\n")
-        availableTags = list(filesOfTag.keys())
-        for tag in sorted(availableTags):
-            if tag == untagged:
-                continue
-            print('* ' + tag)
-
-    if args.listNotes:
-        print("# Available notes\n")
-        availableNotes = list(tagsOfFile.keys())
-        for note in sorted(availableNotes):
-            print('* ' + makeMarkdownLink(note))
-
-    if args.listNotesTags:
-        printAllFilesWithTags()
-
-    if args.listTagsNotes:
-        printAllFilesPerTag()
-
-    if args.tagsToFind:
-        tagsToFind = args.tagsToFind
-        for i in range(len(tagsToFind)):
-            if tagsToFind[i][0] != '#':
-                tagsToFind[i] = '#' + tagsToFind[i].lower()
-            if tagsToFind[i] not in filesOfTag:
-                print('Tag ' + tagsToFind[i] + ' doesn\'t exist')
-                exit()
-        print('# ' + '+'.join(tagsToFind) + '\n')
-        for file in tagsOfFile:
-            tagsFound=0
-            for tag in tagsToFind:
-                if tag not in tagsOfFile[file]:
-                    break
-                tagsFound += 1
-            if tagsFound == len(tagsToFind):
-                print('* ' + makeMarkdownLink(file))
-
-    if args.findTerm:
-        x = system('cd '+args.directory+' && rg -l -i '+ args.findTerm)
-
-def main():
-    args = parseArgumens()
-    handleArguments(args)
+    def setPreviewText(self, textToDisplay):
+        self.openFileArea.config(state = "normal")
+        self.openFileArea.delete(1.0, "end")
+        self.openFileArea.insert(1.0, textToDisplay)
+        self.openFileArea.config(state = "disabled")
 
 if __name__ == "__main__":
-    main()
+    window = tk.Tk()
+
+    window.title("Notes")
+    MainWindowManager()
+
+    window.mainloop()
+
+
