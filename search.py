@@ -35,7 +35,7 @@ class Search:
         filepaths = set()
         i = self.indexOfElementInSearchData(SearchDataEntry('', term))
 
-        while self.searchData[i].word.startswith(term):
+        while i < len(self.searchData) and self.searchData[i].word.startswith(term):
             filepaths.add(self.searchData[i].filePath)
             i += 1
         return filepaths

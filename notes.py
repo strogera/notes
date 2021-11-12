@@ -90,6 +90,7 @@ class MainWindowManager():
         searchFrame = tk.Frame(FileArea, padx = 5)
         searchFrame.pack(side = 'top', fill = 'x')
         self.searchArea = tk.Entry(searchFrame)
+        self.searchArea.bind('<Key>', self.searchAllFiles)
         self.searchArea.pack(side = 'left', fill = 'x', expand = True)
         self.searchArea.bind('<Return>', self.searchAllFiles)
         clearSearchBtn = tk.Button(searchFrame, text = 'x', command = self.hideSearchResultsFrame)
@@ -296,6 +297,7 @@ class MainWindowManager():
     def hideSearchResultsFrame(self):
         self.searchResultsListArea.pack_forget()
         self.fileTreeFrame.pack(side = "left", fill = 'both', expand = True)
+        self.searchArea.delete(0, 'end')
 
     def openFileFromSearch(self, event = None):
         relativePath = self.searchResultsList.get('active')
