@@ -6,6 +6,7 @@ from tkinter import filedialog
 import tkinter.font as tkFont
 import subprocess, platform
 from datetime import datetime
+from search import Search
 
 
 
@@ -23,6 +24,8 @@ class MainWindowManager():
         self.curNotesPath = ''
         if defaultDirPrefKey in self.preferences:
             self.curNotesPath = self.preferences[defaultDirPrefKey]
+
+        self.searchEngine = None
 
         content = tk.Frame(window)
         content.pack(fill = 'both', expand = True)
@@ -81,8 +84,29 @@ class MainWindowManager():
 
 
         # File Tree Area
-        self.fileTreeFrame = tk.Frame(content)
-        self.fileTreeFrame.pack(side = 'left', fill = 'both', expand = True)
+        FileArea = tk.Frame(content)
+        FileArea.pack(side = 'left', fill = 'both', expand = True)
+        # Search buttons
+        searchFrame = tk.Frame(FileArea, padx = 5)
+        searchFrame.grid(row=0, column=0, sticky='ew')
+        #searchFrame.pack(side = 'top')
+        self.searchArea = tk.Entry(searchFrame)#height = 1, width = 30)
+        self.searchArea.pack(side = 'left', fill = 'x')
+        self.searchArea.bind('<Return>', self.searchAllFiles)
+        clearSearchBtn = tk.Button(searchFrame, text = 'x', command = lambda: self.fileTreeFrame.tkraise())
+        clearSearchBtn.pack(side = 'left')
+        searchBtn = tk.Button(searchFrame, text = "search", command = self.searchAllFiles)
+        searchBtn.pack(side = 'left')
+        # Search Results
+        self.searchResultsListArea = tk.Frame(FileArea)
+        self.searchResultsListArea.grid(row=1, column=0, sticky='news')
+        self.searchResultsListArea.rowconfigure(1, weight=1)
+        self.searchResultsList = tk.Listbox(self.searchResultsListArea)
+        self.searchResultsList.pack(side = 'left', fill = 'both', expand = True)
+        # File Tree
+        self.fileTreeFrame = tk.Frame(FileArea)
+        self.fileTreeFrame.grid(row=1, column=0, sticky='news')
+        self.fileTreeFrame.tkraise()
         yFrame = tk.Frame(self.fileTreeFrame)
         self.tree = ttk.Treeview(yFrame)
         ysb = ttk.Scrollbar(yFrame, orient='vertical', command=self.tree.yview)
@@ -92,15 +116,6 @@ class MainWindowManager():
         self.tree.bind("<Double-1>", self.onFileTreeDoubleClick)
         self.tree.pack(side = 'left', fill = 'both', expand = True)
         ysb.pack(side = 'left', fill = 'y')
-        searchFrame = tk.Frame(self.fileTreeFrame, padx = 5)
-        searchFrame.pack(side = 'top')
-        searchArea = tk.Text(searchFrame, height = 1, width = 30)
-        searchArea.pack(side = 'left', fill = 'x')
-        searchArea.insert(1.0, "placeholder")
-        clearSearchBtn = tk.Button(searchFrame, text = 'x')
-        clearSearchBtn.pack(side = 'left')
-        searchBtn = tk.Button(searchFrame, text = "search")
-        searchBtn.pack(side = 'left')
         yFrame.pack(side = 'top', fill = 'both', expand = True)
         xsb.pack(side = 'top', fill = 'x')
         self.setupFileTree()
@@ -127,6 +142,8 @@ class MainWindowManager():
         abspath = os.path.abspath(self.curNotesPath)
         root_node = self.tree.insert('', 'end', text=abspath, open=True)
         self.processDirectory(root_node, abspath)
+
+        self.searchEngine = Search(self.curNotesPath)
         
 
     def processDirectory(self, parent, path):
@@ -261,6 +278,18 @@ class MainWindowManager():
             newNote.write('# ' + name + '\n')
             newNote.write(timestamp +'\n\n')
 
+
+    def searchAllFiles(self, event = None):
+        searchTerm = self.searchArea.get().strip()
+        files = self.searchEngine.search(searchTerm)
+
+        self.searchResultsList.delete(0, 'end')
+        for f in files:
+            self.searchResultsList.insert('end', f)
+        if len(files) == 0:
+            self.searchResultsList.insert('end', "\'" + searchTerm + "'" + ' not found')
+
+        self.searchResultsListArea.tkraise()
 
 
 
