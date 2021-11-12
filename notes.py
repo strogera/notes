@@ -100,6 +100,7 @@ class MainWindowManager():
         self.searchResultsListArea = tk.Frame(FileArea)
         self.searchResultsList = tk.Listbox(self.searchResultsListArea)
         self.searchResultsList.pack(side = 'left', fill = 'both', expand = True)
+        self.searchResultsList.bind("<Double-1>", self.openFileFromSearch)
         # File Tree
         self.fileTreeFrame = tk.Frame(FileArea)
         self.hideSearchResultsFrame()
@@ -168,7 +169,8 @@ class MainWindowManager():
         return fullPath, self.tree.item(selection)['text']
 
     def onFileTreeDoubleClick(self, event):
-        self.loadFile()
+        fullPath, fileName = self.getFullPathOfTreeSelection()
+        self.loadFile(fullPath, fileName)
 
     def setPreviewText(self, textToDisplay):
         self.openFileArea.config(state = "normal")
@@ -212,8 +214,8 @@ class MainWindowManager():
         else:                                   # linux variants
             subprocess.call(('xdg-open', filepath))
 
-    def loadFile(self):
-        fullPath, fileName = self.getFullPathOfTreeSelection()
+    def loadFile(self, fullPath):
+        fileName = os.path.basename(fullPath)
 
         if os.path.isdir(fullPath):
             return
@@ -281,7 +283,7 @@ class MainWindowManager():
 
         self.searchResultsList.delete(0, 'end')
         for f in files:
-            self.searchResultsList.insert('end', f)
+            self.searchResultsList.insert('end', f[len(self.curNotesPath)+1:])
         if len(files) == 0:
             self.searchResultsList.insert('end', "\'" + searchTerm + "'" + ' not found')
 
@@ -294,6 +296,10 @@ class MainWindowManager():
     def hideSearchResultsFrame(self):
         self.searchResultsListArea.pack_forget()
         self.fileTreeFrame.pack(side = "left", fill = 'both', expand = True)
+
+    def openFileFromSearch(self, event = None):
+        relativePath = self.searchResultsList.get('active')
+        self.loadFile(os.path.join(self.curNotesPath, relativePath))
 
 
 if __name__ == "__main__":

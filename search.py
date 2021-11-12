@@ -16,7 +16,6 @@ class Search:
         #self.printData()
 
     def readDir(self, dire):
-        print(dire)
         for p, _, files in os.walk(dire):
             for f in files:
                 curFilePath = os.path.join(p, f)
