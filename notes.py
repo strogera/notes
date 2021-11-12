@@ -35,7 +35,7 @@ class MainWindowManager():
         # Directory Info Area
         infoFrame = tk.Frame(content)
         fr_buttons = tk.Frame(infoFrame, relief=tk.RAISED, bd=2)
-        btn_open = tk.Button(fr_buttons, text="Open Notes Directory", command=self.openDir)
+        btn_open = tk.Button(fr_buttons, text="Open Notes Directory", command=self.openNotesDir)
         self.currentDirLabel = tk.Label(fr_buttons, text = "Current directory: " + self.curNotesPath)
         fr_buttons.grid()
         btn_open.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
@@ -52,7 +52,7 @@ class MainWindowManager():
         fileButtonsFrame = tk.Frame(openFileFrame)
         openInEditorBtn = tk.Button(fileButtonsFrame, text = "Open in Editor", command = self.openFile)
         openInEditorBtn.pack(side = "left")
-        openContainingFolder = tk.Button(fileButtonsFrame, text = "Open Containing Folder", command = self.openDir)
+        openContainingFolder = tk.Button(fileButtonsFrame, text = "Open Containing Folder", command = self.openDirOnSystem)
         openContainingFolder.pack(side = "left")
         zoomPlus = tk.Button(fileButtonsFrame, text = "+", command = self.increaseFontSize)
         zoomPlus.pack(side = "right")
@@ -116,7 +116,7 @@ class MainWindowManager():
         xsb.pack(side = 'top', fill = 'x')
         self.setupFileTree()
 
-    def openDir(self):
+    def openNotesDir(self):
         filepath = filedialog.askdirectory()
         if not filepath:
             return
@@ -189,7 +189,7 @@ class MainWindowManager():
         with open(preferencesFile, 'w') as prefFile:
             prefFile.write(str(self.preferences))
 
-    def openDir(self):
+    def openDirOnSystem(self):
         if self.curNotesPath == "":
             return
         filepath, fileName = self.getFullPathOfTreeSelection()
