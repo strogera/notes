@@ -42,7 +42,7 @@ class MainWindowManager():
         self.currentDirLabel.grid(row=0, column=1, sticky="ew", padx=5)
         self.setDefaultBtn = tk.Button(fr_buttons, text = "Set as Default", command = self.setDefaultNotesDir, state = 'disabled')
         self.setDefaultBtn.grid(row=0, column=2, sticky="ew", padx=5)
-        infoFrame.pack(side = 'top', fill = 'both')
+        infoFrame.pack(side = 'top', fill = 'x')
 
         # Text Area
         self.textFont = tkFont.Font(family="Calibri", size=16)
@@ -88,25 +88,21 @@ class MainWindowManager():
         FileArea.pack(side = 'left', fill = 'both', expand = True)
         # Search buttons
         searchFrame = tk.Frame(FileArea, padx = 5)
-        searchFrame.grid(row=0, column=0, sticky='ew')
-        #searchFrame.pack(side = 'top')
-        self.searchArea = tk.Entry(searchFrame)#height = 1, width = 30)
-        self.searchArea.pack(side = 'left', fill = 'x')
+        searchFrame.pack(side = 'top', fill = 'x')
+        self.searchArea = tk.Entry(searchFrame)
+        self.searchArea.pack(side = 'left', fill = 'x', expand = True)
         self.searchArea.bind('<Return>', self.searchAllFiles)
-        clearSearchBtn = tk.Button(searchFrame, text = 'x', command = lambda: self.fileTreeFrame.tkraise())
+        clearSearchBtn = tk.Button(searchFrame, text = 'x', command = self.hideSearchResultsFrame)
         clearSearchBtn.pack(side = 'left')
         searchBtn = tk.Button(searchFrame, text = "search", command = self.searchAllFiles)
         searchBtn.pack(side = 'left')
         # Search Results
         self.searchResultsListArea = tk.Frame(FileArea)
-        self.searchResultsListArea.grid(row=1, column=0, sticky='news')
-        self.searchResultsListArea.rowconfigure(1, weight=1)
         self.searchResultsList = tk.Listbox(self.searchResultsListArea)
         self.searchResultsList.pack(side = 'left', fill = 'both', expand = True)
         # File Tree
         self.fileTreeFrame = tk.Frame(FileArea)
-        self.fileTreeFrame.grid(row=1, column=0, sticky='news')
-        self.fileTreeFrame.tkraise()
+        self.hideSearchResultsFrame()
         yFrame = tk.Frame(self.fileTreeFrame)
         self.tree = ttk.Treeview(yFrame)
         ysb = ttk.Scrollbar(yFrame, orient='vertical', command=self.tree.yview)
@@ -289,8 +285,15 @@ class MainWindowManager():
         if len(files) == 0:
             self.searchResultsList.insert('end', "\'" + searchTerm + "'" + ' not found')
 
-        self.searchResultsListArea.tkraise()
+        self.showSearchResultsFrame()
 
+    def showSearchResultsFrame(self):
+        self.fileTreeFrame.pack_forget()
+        self.searchResultsListArea.pack(side = "left", fill = 'both', expand = True)
+
+    def hideSearchResultsFrame(self):
+        self.searchResultsListArea.pack_forget()
+        self.fileTreeFrame.pack(side = "left", fill = 'both', expand = True)
 
 
 if __name__ == "__main__":
