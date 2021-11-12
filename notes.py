@@ -171,7 +171,7 @@ class MainWindowManager():
 
     def onFileTreeDoubleClick(self, event):
         fullPath, fileName = self.getFullPathOfTreeSelection()
-        self.loadFile(fullPath, fileName)
+        self.loadFile(fullPath)
 
     def setPreviewText(self, textToDisplay):
         self.openFileArea.config(state = "normal")
