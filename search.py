@@ -13,7 +13,6 @@ class Search:
     def __init__(self, directory):
         self.searchData = []
         self.readDir(directory)
-        #self.printData()
 
     def readDir(self, dire):
         for p, _, files in os.walk(dire):
@@ -27,32 +26,16 @@ class Search:
 
     def indexOfElementInSearchData(self, elem):
         i = bisect.bisect_left(self.searchData, elem)
-        if i != len(self.searchData) and self.searchData[i].word == elem.word:
+        if i != len(self.searchData) and self.searchData[i].word.startswith(elem.word):
             return i
         return -1
 
     def search(self, term):
         term = term.lower()
         filepaths = set()
-        #i = self.indexOfElementInSearchData(SearchDataEntry('', term))
-        try:
-            i = [x.word for x in self.searchData].index(term)
-        except ValueError:
-            return filepaths
-            
-
-        #if i == -1:
-            #print("not found")
-            #return filepaths
+        i = self.indexOfElementInSearchData(SearchDataEntry('', term))
 
         while self.searchData[i].word.startswith(term):
             filepaths.add(self.searchData[i].filePath)
             i += 1
         return filepaths
-
-    def printData(self):
-        for entry in self.searchData:
-            try:
-                print(entry.word, '->', entry.filePath)
-            except:
-                continue
