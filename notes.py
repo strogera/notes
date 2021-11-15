@@ -58,7 +58,7 @@ class MainWindowManager():
         zoomPlus.pack(side = "right")
         zoomMinus = tk.Button(fileButtonsFrame, text = "-", command = self.decreaseFontSize)
         zoomMinus.pack(side = "right")
-        self.refreshFile = tk.Button(fileButtonsFrame, text = "Reload File", command = self.loadFile, state = 'disabled')
+        self.refreshFile = tk.Button(fileButtonsFrame, text = "Reload File", command = self.onFileTreeDoubleClick, state = 'disabled')
         self.refreshFile.pack(side = "right")
         newNoteBtn = tk.Button(fileButtonsFrame, text = "Add New Note", command = self.newNoteWindow)
         newNoteBtn.pack(side = "left")
@@ -169,7 +169,7 @@ class MainWindowManager():
             item = self.tree.parent(item)
         return fullPath, self.tree.item(selection)['text']
 
-    def onFileTreeDoubleClick(self, event):
+    def onFileTreeDoubleClick(self, event = None):
         fullPath, fileName = self.getFullPathOfTreeSelection()
         self.loadFile(fullPath)
 
