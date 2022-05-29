@@ -1,5 +1,4 @@
 import os
-import re
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
@@ -10,8 +9,8 @@ from search import Search
 
 
 
-preferencesFile = './preferences.py'
-defaultDirPrefKey = 'defaultDir' 
+preferencesFile = 'preferences.py'
+defaultDirPrefKey = 'defaultDir'
 
 class MainWindowManager():
     def __init__(self, root):
@@ -31,7 +30,6 @@ class MainWindowManager():
         content.pack(fill = 'both', expand = True)
 
 
-        
         # Directory Info Area
         infoFrame = tk.Frame(content)
         fr_buttons = tk.Frame(infoFrame, relief=tk.RAISED, bd=2)
@@ -46,7 +44,7 @@ class MainWindowManager():
 
         # Text Area
         self.textFont = tkFont.Font(family="Calibri", size=16)
-        openFileFrame = tk.Frame(content) 
+        openFileFrame = tk.Frame(content)
         self.fileNameLabel = tk.Label(openFileFrame, text = "", font = self.textFont)
         self.fileNameLabel.pack(side = 'top', fill = 'x')
         fileButtonsFrame = tk.Frame(openFileFrame)
@@ -126,7 +124,7 @@ class MainWindowManager():
         window.title(f"Notes - {filepath}")
         self.currentDirLabel.configure(text = "Current Directory: " + self.curNotesPath)
         self.setupFileTree()
-        if self.preferences[defaultDirPrefKey] != self.curNotesPath:
+        if defaultDirPrefKey in self.preferences and self.preferences[defaultDirPrefKey] != self.curNotesPath:
             self.setDefaultBtn.configure(state = 'normal')
         else:
             self.setDefaultBtn.configure(state = 'disabled')
@@ -134,7 +132,7 @@ class MainWindowManager():
     def setupFileTree(self):
         if self.curNotesPath == "":
             return
-        
+
         self.tree.delete(*self.tree.get_children())
 
         abspath = os.path.abspath(self.curNotesPath)
@@ -142,7 +140,6 @@ class MainWindowManager():
         self.processDirectory(root_node, abspath)
 
         self.searchEngine = Search(self.curNotesPath)
-        
 
     def processDirectory(self, parent, path):
         for p in os.listdir(path):
@@ -159,7 +156,7 @@ class MainWindowManager():
             return self.curNotesPath, ''
 
         item = selection
-        fullPath = "" 
+        fullPath = ""
         while item != "":
             parent = self.tree.item(item)['text']
             if fullPath == "":
@@ -181,10 +178,10 @@ class MainWindowManager():
         self.refreshFile.configure(state = 'normal')
 
     def increaseFontSize(self):
-        self.textFont.configure(size = self.textFont['size']+2) 
+        self.textFont.configure(size = self.textFont['size']+2)
 
     def decreaseFontSize(self):
-        self.textFont.configure(size = self.textFont['size']-2) 
+        self.textFont.configure(size = self.textFont['size']-2)
 
     def setDefaultNotesDir(self):
         self.setDefaultBtn.configure(state = 'disabled')
@@ -220,8 +217,14 @@ class MainWindowManager():
 
         if os.path.isdir(fullPath):
             return
-        self.setPreviewText(''.join(open(fullPath, 'r', encoding = "utf-8", errors = "ignore").readlines()))
-        self.fileNameLabel.configure(text = fileName)
+        if os.path.exists(fullPath):
+            self.setPreviewText(''.join(open(fullPath, 'r', encoding = "utf-8", errors = "ignore").readlines()))
+            self.fileNameLabel.configure(text = fileName)
+        else:
+            msg = "File doesn't exist"
+            self.setPreviewText(msg)
+            self.fileNameLabel.configure(text = msg)
+
 
     def newNoteWindow(self):
         self.newNoteWindowToplevel = tk.Toplevel()
@@ -256,7 +259,7 @@ class MainWindowManager():
         time = datetime.now()
         name = time.strftime("%d-%m-%Y@%H%M%S") + '.md'
         self.makeNewNote(name)
-        self.newNoteWindowToplevel.destroy() 
+        self.newNoteWindowToplevel.destroy()
         self.setupFileTree()
         self.setPreviewText(''.join(open(os.path.join(self.curNotesPath, name), 'r', encoding = "utf-8", errors = "ignore").readlines()))
 
@@ -265,7 +268,7 @@ class MainWindowManager():
         name = os.path.normpath(name.replace('\n', '')) + '.md'
         if name != "":
             self.makeNewNote(name)
-        self.newNoteWindowToplevel.destroy() 
+        self.newNoteWindowToplevel.destroy()
         self.setupFileTree()
         if name != "":
             self.setPreviewText(''.join(open(os.path.join(self.curNotesPath, name)).readlines()))
