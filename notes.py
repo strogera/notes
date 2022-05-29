@@ -206,11 +206,20 @@ class MainWindowManager():
     def openFile(self):
         filepath, _ = self.getFullPathOfTreeSelection()
         if platform.system() == 'Darwin':       # macOS
-            subprocess.call(('open', filepath))
+            try:
+                subprocess.call(('open', filepath))
+            except:
+                pass
         elif platform.system() == 'Windows':    # Windows
-            os.startfile(filepath)
+            try:
+                os.startfile(filepath)
+            except:
+                pass
         else:                                   # linux variants
-            subprocess.call(('xdg-open', filepath))
+            try:
+                subprocess.call(('xdg-open', filepath))
+            except:
+                pass
 
     def loadFile(self, fullPath):
         fileName = os.path.basename(fullPath)
